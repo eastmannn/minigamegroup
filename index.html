@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>게임 모음</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --accent: #e94560;
+      --text: #eee;
+      --muted: #aaa;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      padding: 72px 20px 56px;
+      background: radial-gradient(ellipse at center, #0f3460 0%, #1a1a2e 70%);
+      border-bottom: 1px solid #0f3460;
+    }
+
+    header h1 {
+      font-size: clamp(2.4rem, 6vw, 3.6rem);
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+
+    header h1 span { color: var(--accent); }
+
+    header p {
+      font-size: 1.1rem;
+      color: var(--muted);
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      box-shadow: 0 8px 28px rgba(233, 69, 96, 0.15);
+    }
+
+    .card-icon {
+      font-size: 2.8rem;
+      line-height: 1;
+    }
+
+    .card-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .card-desc {
+      font-size: 0.95rem;
+      color: var(--muted);
+      flex: 1;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+      width: fit-content;
+    }
+
+    .badge-red    { background: rgba(231, 76, 60, 0.2);  color: #e74c3c; border: 1px solid #e74c3c; }
+    .badge-green  { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid #2ecc71; }
+    .badge-yellow { background: rgba(241, 196, 15, 0.2); color: #f1c40f; border: 1px solid #f1c40f; }
+    .badge-blue   { background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px solid #3498db; }
+    .badge-purple { background: rgba(155, 89, 182, 0.2); color: #9b59b6; border: 1px solid #9b59b6; }
+
+    .btn-play {
+      display: block;
+      text-align: center;
+      padding: 12px;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 1rem;
+      transition: background 0.2s, transform 0.15s;
+      margin-top: 4px;
+    }
+
+    .btn-play:hover {
+      background: #c73652;
+      transform: translateY(-1px);
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      border-top: 1px solid #1e3a5f;
+      background: var(--surface);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>게임 <span>모음</span></h1>
+  <p>5가지 클래식 브라우저 게임을 한 곳에서 즐기세요</p>
+</header>
+
+<main>
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-icon">💣</div>
+      <div class="card-title">지뢰찾기</div>
+      <div class="card-desc">숨겨진 지뢰를 찾아라. 논리와 추론으로 모든 안전한 칸을 열어내세요.</div>
+      <span class="badge badge-red">난이도 상</span>
+      <a class="btn-play" href="minesweeper.html">플레이</a>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">🐍</div>
+      <div class="card-title">뱀 게임</div>
+      <div class="card-desc">먹이를 먹으며 성장하는 뱀. 벽이나 자신의 몸에 부딪히지 않도록 조심하세요.</div>
+      <span class="badge badge-green">난이도 중</span>
+      <a class="btn-play" href="snake.html">플레이</a>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">🔢</div>
+      <div class="card-title">2048</div>
+      <div class="card-desc">같은 숫자 타일을 합쳐라. 방향키로 타일을 밀어 2048을 만들어보세요.</div>
+      <span class="badge badge-yellow">난이도 중</span>
+      <a class="btn-play" href="game_2048.html">플레이</a>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">🃏</div>
+      <div class="card-title">카드 뒤집기</div>
+      <div class="card-desc">같은 그림 카드를 모두 맞춰라. 기억력을 발휘해 16장의 카드를 모두 짝지으세요.</div>
+      <span class="badge badge-blue">난이도 하</span>
+      <a class="btn-play" href="memory_card.html">플레이</a>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">🐹</div>
+      <div class="card-title">두더지 잡기</div>
+      <div class="card-desc">튀어오르는 두더지를 잡아라. 60초 안에 최대한 많은 두더지를 잡으세요.</div>
+      <span class="badge badge-purple">난이도 하</span>
+      <a class="btn-play" href="whack_a_mole.html">플레이</a>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <p>게임 모음 &mdash; 브라우저에서 즐기는 클래식 게임들</p>
+</footer>
+
+</body>
+</html>

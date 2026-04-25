@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>지뢰찾기</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+      color: #eee;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 16px;
+      letter-spacing: 2px;
+      color: #e94560;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+
+    select, button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    select {
+      background: #16213e;
+      color: #eee;
+      border: 1px solid #e94560;
+    }
+
+    button {
+      background: #e94560;
+      color: #fff;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: #c73652; }
+
+    .info-bar {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 16px;
+      font-size: 1.1rem;
+    }
+
+    .info-bar span { color: #e94560; font-weight: bold; }
+
+    #board {
+      display: grid;
+      gap: 2px;
+      background: #16213e;
+      padding: 8px;
+      border-radius: 8px;
+      border: 2px solid #e94560;
+      user-select: none;
+    }
+
+    .cell {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #0f3460;
+      border: 2px solid #1a4a7a;
+      transition: background 0.1s;
+    }
+
+    .cell:hover:not(.revealed):not(.flagged) {
+      background: #1a5a9a;
+    }
+
+    .cell.revealed {
+      background: #0a1628;
+      border-color: #0a1628;
+      cursor: default;
+    }
+
+    .cell.flagged {
+      background: #2a1a3e;
+      border-color: #9b59b6;
+    }
+
+    .cell.mine-exploded {
+      background: #c0392b;
+      border-color: #e74c3c;
+    }
+
+    .cell.mine-revealed {
+      background: #1a0a0a;
+      border-color: #555;
+    }
+
+    .n1 { color: #3498db; }
+    .n2 { color: #2ecc71; }
+    .n3 { color: #e74c3c; }
+    .n4 { color: #9b59b6; }
+    .n5 { color: #e67e22; }
+    .n6 { color: #1abc9c; }
+    .n7 { color: #f39c12; }
+    .n8 { color: #ecf0f1; }
+
+    #message {
+      margin-top: 20px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      min-height: 36px;
+      color: #f1c40f;
+    }
+  </style>
+</head>
+<body>
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:4px;">
+    <a href="index.html" style="padding:6px 14px;background:transparent;color:#aaa;border:1px solid #444;border-radius:6px;font-size:0.85rem;text-decoration:none;transition:border-color 0.2s,color 0.2s;" onmouseover="this.style.borderColor='#e94560';this.style.color='#eee'" onmouseout="this.style.borderColor='#444';this.style.color='#aaa'">← 홈으로</a>
+    <h1>지뢰찾기</h1>
+  </div>
+
+  <div class="controls">
+    <select id="difficulty">
+      <option value="beginner">초급 (9x9, 지뢰 10)</option>
+      <option value="intermediate" selected>중급 (16x16, 지뢰 40)</option>
+      <option value="expert">고급 (30x16, 지뢰 99)</option>
+    </select>
+    <button onclick="newGame()">새 게임</button>
+  </div>
+
+  <div class="info-bar">
+    <div>남은 지뢰: <span id="mine-count">0</span></div>
+    <div>시간: <span id="timer">0</span>초</div>
+  </div>
+
+  <div id="board"></div>
+  <div id="message"></div>
+
+  <script>
+    const DIFFICULTIES = {
+      beginner:     { rows: 9,  cols: 9,  mines: 10 },
+      intermediate: { rows: 16, cols: 16, mines: 40 },
+      expert:       { rows: 16, cols: 30, mines: 99 },
+    };
+
+    let rows, cols, totalMines;
+    let board, revealed, flagged, minePositions;
+    let gameOver, gameStarted;
+    let timerInterval, elapsed;
+
+    function newGame() {
+      const diff = document.getElementById('difficulty').value;
+      ({ rows, cols, mines: totalMines } = DIFFICULTIES[diff]);
+
+      board = Array.from({ length: rows }, () => Array(cols).fill(0));
+      revealed = Array.from({ length: rows }, () => Array(cols).fill(false));
+      flagged = Array.from({ length: rows }, () => Array(cols).fill(false));
+      minePositions = new Set();
+      gameOver = false;
+      gameStarted = false;
+      elapsed = 0;
+
+      clearInterval(timerInterval);
+      document.getElementById('timer').textContent = '0';
+      document.getElementById('mine-count').textContent = totalMines;
+      document.getElementById('message').textContent = '';
+
+      renderBoard();
+    }
+
+    function placeMines(firstR, firstC) {
+      const excluded = new Set();
+      for (let dr = -1; dr <= 1; dr++)
+        for (let dc = -1; dc <= 1; dc++) {
+          const nr = firstR + dr, nc = firstC + dc;
+          if (nr >= 0 && nr < rows && nc >= 0 && nc < cols)
+            excluded.add(nr * cols + nc);
+        }
+
+      while (minePositions.size < totalMines) {
+        const pos = Math.floor(Math.random() * rows * cols);
+        if (!excluded.has(pos)) minePositions.add(pos);
+      }
+
+      for (const pos of minePositions) {
+        const r = Math.floor(pos / cols), c = pos % cols;
+        board[r][c] = -1;
+      }
+
+      for (let r = 0; r < rows; r++)
+        for (let c = 0; c < cols; c++)
+          if (board[r][c] !== -1)
+            board[r][c] = countAdjacentMines(r, c);
+    }
+
+    function countAdjacentMines(r, c) {
+      let count = 0;
+      for (let dr = -1; dr <= 1; dr++)
+        for (let dc = -1; dc <= 1; dc++) {
+          const nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && board[nr][nc] === -1)
+            count++;
+        }
+      return count;
+    }
+
+    function reveal(r, c) {
+      if (r < 0 || r >= rows || c < 0 || c >= cols) return;
+      if (revealed[r][c] || flagged[r][c]) return;
+
+      revealed[r][c] = true;
+
+      if (board[r][c] === 0)
+        for (let dr = -1; dr <= 1; dr++)
+          for (let dc = -1; dc <= 1; dc++)
+            reveal(r + dr, c + dc);
+    }
+
+    function handleClick(r, c) {
+      if (gameOver || revealed[r][c] || flagged[r][c]) return;
+
+      if (!gameStarted) {
+        gameStarted = true;
+        placeMines(r, c);
+        timerInterval = setInterval(() => {
+          elapsed++;
+          document.getElementById('timer').textContent = elapsed;
+        }, 1000);
+      }
+
+      if (board[r][c] === -1) {
+        revealAllMines(r, c);
+        gameOver = true;
+        clearInterval(timerInterval);
+        document.getElementById('message').textContent = '펑! 게임 오버!';
+        return;
+      }
+
+      reveal(r, c);
+      renderBoard();
+      checkWin();
+    }
+
+    function handleRightClick(e, r, c) {
+      e.preventDefault();
+      if (gameOver || revealed[r][c]) return;
+
+      flagged[r][c] = !flagged[r][c];
+      const flagCount = flagged.flat().filter(Boolean).length;
+      document.getElementById('mine-count').textContent = totalMines - flagCount;
+      renderBoard();
+    }
+
+    function revealAllMines(explodedR, explodedC) {
+      for (const pos of minePositions) {
+        const r = Math.floor(pos / cols), c = pos % cols;
+        revealed[r][c] = true;
+      }
+      renderBoard();
+      const cell = document.querySelector(`[data-r="${explodedR}"][data-c="${explodedC}"]`);
+      if (cell) {
+        cell.classList.remove('revealed');
+        cell.classList.add('mine-exploded');
+      }
+    }
+
+    function checkWin() {
+      let unrevealedSafe = 0;
+      for (let r = 0; r < rows; r++)
+        for (let c = 0; c < cols; c++)
+          if (!revealed[r][c] && board[r][c] !== -1)
+            unrevealedSafe++;
+
+      if (unrevealedSafe === 0) {
+        gameOver = true;
+        clearInterval(timerInterval);
+        document.getElementById('message').textContent = `승리! ${elapsed}초 만에 클리어!`;
+      }
+    }
+
+    function renderBoard() {
+      const boardEl = document.getElementById('board');
+      boardEl.style.gridTemplateColumns = `repeat(${cols}, 36px)`;
+      boardEl.innerHTML = '';
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.r = r;
+          cell.dataset.c = c;
+
+          if (flagged[r][c] && !revealed[r][c]) {
+            cell.classList.add('flagged');
+            cell.textContent = '🚩';
+          } else if (revealed[r][c]) {
+            if (board[r][c] === -1) {
+              cell.classList.add('mine-revealed');
+              cell.textContent = '💣';
+            } else {
+              cell.classList.add('revealed');
+              if (board[r][c] > 0) {
+                cell.textContent = board[r][c];
+                cell.classList.add(`n${board[r][c]}`);
+              }
+            }
+          }
+
+          cell.addEventListener('click', () => handleClick(r, c));
+          cell.addEventListener('contextmenu', (e) => handleRightClick(e, r, c));
+          boardEl.appendChild(cell);
+        }
+      }
+    }
+
+    newGame();
+  </script>
+</body>
+</html>
